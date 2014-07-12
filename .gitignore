@@ -54,3 +54,10 @@ docs/_build/
 
 # ipython notebook checkpoints
 .ipynb_checkpoints/
+
+# Eclipse/PyDev stuff
+.settings/
+
+# Textfile output
+B2_out.txt
+
