@@ -1,6 +1,4 @@
-
-# coding: utf-8
-
+#%matplotlib inline
 from scipy.integrate import ode
 import numpy as np
 from scipy.interpolate import PchipInterpolator as pchip
@@ -16,7 +14,7 @@ class DerryModel(object):
 
 
     # For the initializer, we are using Python syntax for a named argument, with a default value.
-    # To change anything from its default, simply pass that as a named argment with a different value.
+    # To change anything from its default, simply pass that as a named argument with a different value.
     # E.g. foo = DerryModel(rain=0.30) will set rain to 0.30 and leave everything else at defaults.
     def __init__(self,
                  wflux = 0.001,       # 10^18 m3/yr, surf-deep water exchang rate
@@ -36,8 +34,6 @@ class DerryModel(object):
         self.distime = distime
         self.watemp = watemp
         self.matmco2 = matmco2
-        # build empty solution vector
-        self.ydot = np.zeros(5)
 
         zeroC = 273.15
 
@@ -122,8 +118,6 @@ class DerryModel(object):
         else:
             raise ValueError('Unknown future scenario name')
 
-        print(self.emis)
-
         #Initialize pchip interpolation on t as specifed by ode solver
         # Matlab's call is structured yi = pchip(x,y,xi)
         # where x,y are vectors containing the "control points" (independent and dependent variables, in sequence)
@@ -191,7 +185,7 @@ class DerryModel(object):
     
         return ydot
 
-    def walker(self):
+    def walker(self, Vm = 2.905661):
         """The top-level function to be called to run the model."""
         # define initial conditions
         y0 =np.array([self.pco2, self.sigcs, self.sigcd, self.alks, self.alkd],dtype=np.float32)
@@ -216,7 +210,7 @@ class DerryModel(object):
         # into the integration scheme with little harm done to the solution. Fingers crossed.
         #
         # So, let's evaluate the solution every year for the tfinal year duration of the run.
-        dt = 1.
+        dt = 1.0
 
         self.r = ode(self.walkeralk).set_integrator('dopri5')
         self.r.set_initial_value(y0,tspan[0])
@@ -271,7 +265,8 @@ class DerryModel(object):
         CO2o = 277.3           #baseline CO2, ppm
 
         #volcanic forcing
-        Vm = 2.905661          #mean 20th cent volcanic forcing from Berkely Earth project
+        # Now passed in as an argument as a test of the interactive slider stuff
+        #Vm = 2.905661         #mean 20th cent volcanic forcing from Berkely Earth project
                                #obtained by averaging the 12 month moving average data from 1900 thru 1999
 
         gamma = -0.01515       #volcanic aerosol coefficient
@@ -296,41 +291,67 @@ class DerryModel(object):
         #xlswrite('CDIAC10_history', EMIS_HIST)
         #plot results
 
-        plt.figure(1)
+        fig1 = plt.figure(1,figsize=(18.0,6.0))
 
         plt.subplot(231)
         plt.plot(calentime,emissions,'r',linewidth=1.5)
         plt.title('CO2 emissions, Gt/yr')
-        #plt.axis([1800 2100 0 110])
+        plt.xlim(1800,2100)
+        plt.ylim(0,110)
 
-        #subplot(232);
-        #plot(calentime,CO2_ppm,'m','LineWidth',1.5);
-        #title('pCO2, ppmv'), axis([1800 2100 250 1100]);
+        plt.subplot(232)
+        plt.plot(calentime,CO2_ppm,'m',linewidth=1.5)
+        plt.title('pCO2, ppmv')
+        plt.xlim([1800, 2100])
+        plt.ylim([250, 1100])
 
-        #subplot(233);
-        #plot(calentime,y(:,2),'c','LineWidth',1.5), axis([1800 2100 2 2.4]);
-        #hold on; plot(calentime,y(:,3),'k','LineWidth',1.5);
-        #title('TCO2'), ylabel('mmol/kg');
-        #legend('TCO2surf', 'TCO2deep', 'Location', 'Northwest');
-        #hold off;
+        plt.subplot(233)
+        plt.plot(calentime,y[:,1],'c',linewidth=1.5)
+        plt.xlim([1800, 2100])
+        plt.ylim([2, 2.4])
+        plt.plot(calentime,y[:,2],'k',linewidth=1.5)
+        plt.title('TCO2')
+        plt.ylabel('mmol/kg')
+        plt.legend(('TCO2surf', 'TCO2deep'), loc='upper left')
 
-        #subplot(234);
-        #plot(calentime, pH, 'LineWidth',1.5), title('surface ocean pH'), axis([1800 2100 7.8 8.4]);
+        plt.subplot(234)
+        plt.plot(calentime, pH, linewidth=1.5)
+        plt.title('surface ocean pH')
+        plt.xlim([1800, 2100])
+        plt.ylim([7.8, 8.4])
 
-        #subplot(235);
-        #plot(calentime,hco3, 'r','LineWidth',1.5), title('surface HCO3-, mM'), axis([1800 2100 1.8 2.2]);
+        plt.subplot(235)
+        plt.plot(calentime,hco3, 'r',linewidth=1.5)
+        plt.title('surface HCO3-, mM')
+        plt.xlim([1800, 2100])
+        plt.ylim([1.8, 2.2]);
 
-        #subplot(236);
-        #plot(calentime,co3, 'g','LineWidth',1.5), title('surface CO3=, mM'), axis([1800 2100 0.05 0.25]);
+        plt.subplot(236);
+        plt.plot(calentime,co3, 'g',linewidth=1.5)
+        plt.title('surface CO3=, mM')
+        plt.xlim([1800, 2100])
+        plt.ylim([0.05, 0.25])
 
-        #figure(3)
-        #subplot(211);
-        #plot(calentime, CO2_ppm, 'b','LineWidth',1.5), title('CO2 ppm'), axis([1800 2100 200 1200]);
-        #subplot(212);
-        #plot(calentime, T_model, 'r','LineWidth',1.5), title('temperature C'), axis([1800 2100 8 15]);
+        fig1.savefig('fig1.png', dpi=fig1.dpi)
+
+
+        # No fig. 2jQuery20301879276212672375_1405302322683?
+        fig3 = plt.figure(3,figsize=(18.0,6.0))
+        plt.subplot(211)
+        plt.plot(calentime, CO2_ppm, 'b',linewidth=1.5)
+        plt.title('CO2 ppm')
+        plt.xlim([1800, 2100])
+        plt.ylim([200, 1200])
+
+        plt.subplot(212)
+        plt.plot(calentime, T_model, 'r',linewidth=1.5)
+        plt.title('temperature C')
+        plt.xlim([1800, 2100])
+        plt.ylim([8, 15])
+        fig3.savefig('fig3.png', dpi=fig3.dpi)
 
         return
 
 if __name__ == '__main__':
     model = DerryModel()
-    model.walker()
+    model.walker(Vm = 2.905661)

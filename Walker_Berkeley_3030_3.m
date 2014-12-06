@@ -1,4 +1,4 @@
-   %three box model of carbon system from Walker 1991 
+%three box model of carbon system from Walker 1991 
 %   "Numerical Adventures with Geochemical Cycles", ch. 5.
 % boxes are atmosphere, surface ocean, and deep ocean
 % exchange between the atm and surf box depends on the pCO2 difference
@@ -11,6 +11,7 @@
 % eqns.
 
 
+pkg load ode45
 
 function walker
 %close all               %useful to close figure panes between runs
@@ -103,7 +104,8 @@ emis = cat(1, EMIS_HIST, emis_A2);
 %%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %implement pchip interpolation on t as specifed by ode solver
-emisp=pchip(emis(:,1), emis(:,2), t);
+%emisp=pchip(emis(:,1), emis(:,2), t);
+emisp=interp1(emis(:,1), emis(:,2), t, "pchip");
 x=size(emisp);
 
 emissions = emisp*1000*44;  %convert 10^18 mol CO2/yr to Gton CO2 
@@ -206,7 +208,8 @@ emis_B2=[220 230 240 250 260 270 280 290 300; ...
 %concatenate historical and projected emissions to get full 300 yr vector
 emis = cat(1, EMIS_HIST, emis_A2);
 %implement pchip interpolation on t as specifed by ode solver
-fuel=pchip(emis(:,1), emis(:,2), t);
+#fuel=pchip(emis(:,1), emis(:,2), t);
+fuel = interp1(emis(:,1), emis(:,2), t,"pchip");
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 %The basic differential equations
